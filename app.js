@@ -32,9 +32,8 @@ request(createReqHeader(repoURL), (err, res, body) => {
 
 
 const downloadAvatarFromUrl = (url, userId) => {
-	request(createReqHeader(url)).pipe(fs.createWriteStream(`./avatars/user${userId}.jpg`)).then(() => {
-		console.log("Success!");
-	});
+	
+	request(createReqHeader(url)).pipe(fs.createWriteStream(`./avatars/user${userId}.jpg`));
 }
 
 
