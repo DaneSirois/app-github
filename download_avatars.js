@@ -1,39 +1,51 @@
-
 require('dotenv').config();
 
-var request = require('request');
-let fs = require('fs');
+const request = require('request');
+const fs = require('fs');
+const utilities = require('./utilities.js');
 
 const cmdInput = process.argv.slice(2);
-
-const repoURL = `https://api.github.com/repos/${cmdInput[0]}/${cmdInput[1]}/contributors`;
+const userName = cmdInput[0] || "placeholder";
+const repoName = cmdInput[1] || "placeholder";
 
 const createReqHeader = (url) => {
-  return ({
+  return {
     url: url,
     headers: {
       'User-Agent': 'request'
     },
     auth: {
-      user: process.env.USERNAME,
-      pass: process.env.CLIENT_KEY
+      user: (process.env.USERNAME === undefined) ? console.log("ERROR: Add your Github username to the '.env' file!") : process.env.USERNAME,
+      pass: (process.env.CLIENT_KEY === undefined) ? console.log("ERROR: Add your Github client key to the '.env' file!") : process.env.CLIENT_KEY
     }
-  })
+  }
 };
 
-request(createReqHeader(repoURL), (err, res, body) => {
-  if (err) { throw err };
+const getRepoContributors = (userName, repoName) => {
 
-  const contributors = JSON.parse(body);
+  const repoURL = `https://api.github.com/repos/${userName}/${repoName}/contributors`;
+
+  request(createReqHeader(repoURL), (err, res, body) => {
+    if (err) { 
+      console.log("Missing a command line argument when running this file! Check your input and try again!");
+      throw err 
+    };
+
+    const contributors = JSON.parse(body);
+    
+    contributors.forEach( (user) => { downloadAvatarFromUrl(user.avatar_url, user.login) });
+  });
+
+};
+
+const downloadAvatarFromUrl = (url, userName) => {
+
+  utilities.checkForDirectory('./avatars');
   
-  contributors.forEach((user) => { downloadAvatarFromUrl(user.avatar_url, user.id) });
+  request(createReqHeader(url)).pipe(fs.createWriteStream(`./avatars/${userName}.jpg`));
 
-});
+  console.log(`Successfully written ${userName}'s avatar to 'app-github/avatars'!`);
 
-
-const downloadAvatarFromUrl = (url, userId) => {
-  
-  request(createReqHeader(url)).pipe(fs.createWriteStream(`./avatars/user${userId}.jpg`));
 }
 
-
+getRepoContributors(userName, repoName);
