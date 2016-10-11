@@ -5,30 +5,30 @@ var cmdInput = process.argv[2];
 
 let readHTML = function (url, callback) {
 
-	const requestOptions = {
-		host: url,
-		path: "/"
-	};
+  const requestOptions = {
+    host: url,
+    path: "/"
+  };
 
-	http.get(requestOptions, (res) => {
-		
-		res.setEncoding("utf8");
-		var foo = "";
+  http.get(requestOptions, (res) => {
+    
+    res.setEncoding("utf8");
+    var foo = "";
 
-		res.on("data", (data) => {
-			//console.log(data);	
-			foo += data;
-		});
+    res.on("data", (data) => {
+      //console.log(data);  
+      foo += data;
+    });
 
-		res.on("end", () => {
-			callback(foo);
-		});
+    res.on("end", () => {
+      callback(foo);
+    });
 
 
-	});
+  });
 
 };
 
 readHTML(cmdInput, (htmlData) => {
-	console.log(htmlData);
+  console.log(htmlData);
 });
