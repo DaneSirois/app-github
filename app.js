@@ -1,33 +1,40 @@
+
+require('dotenv').config();
+
 var request = require('request');
-var http = require('http');
+let fs = require('fs');
 
-var cmdInput = process.argv[2];
+const cmdInput = process.argv.slice(2);
 
-let readHTML = function (url, callback) {
+const repoURL = `https://api.github.com/repos/${cmdInput[0]}/${cmdInput[1]}/contributors`;
 
-	const requestOptions = {
-		host: url,
-		path: "/"
-	};
-
-	http.get(requestOptions, (res) => {
-		
-		res.setEncoding("utf8");
-		var answer = "";
-
-		res.on("data", (data) => {
-			//console.log(data);	
-			answer += data;
-		});
-
-		res.on("end", () => {
-			callback(answer);
-		});
-
-	});
-
+const createReqHeader = (url) => {
+	return ({
+		url: url,
+		headers: {
+    	'User-Agent': 'request'
+  	},
+  	auth: {
+   		user: process.env.USERNAME,
+    	pass: process.env.CLIENT_KEY
+  	}
+	})
 };
 
-readHTML(cmdInput, (htmlData) => {
-	console.log(htmlData);
+request(createReqHeader(repoURL), (err, res, body) => {
+	if (err) { throw err };
+
+	const contributors = JSON.parse(body);
+	
+	contributors.forEach((user) => { downloadAvatarFromUrl(user.avatar_url, user.id) });
+
 });
+
+
+const downloadAvatarFromUrl = (url, userId) => {
+	request(createReqHeader(url)).pipe(fs.createWriteStream(`./avatars/user${userId}.jpg`)).then(() => {
+		console.log("Success!");
+	});
+}
+
+
